@@ -1,0 +1,483 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Der Weg bis zur Tasse</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<style>
+html { scroll-snap-type: y mandatory; scroll-behavior: smooth; }
+body { font-size: clamp(15px, 1.15vw, 22px); }
+.scene { min-height: 100vh; scroll-snap-align: start; padding: 7vh 6vw; position: relative; display: grid; align-items: center; overflow: hidden; }
+.scene:nth-child(even) { background: var(--bg2); }
+h1 { font-size: clamp(42px, 6.2vw, 120px); line-height: .95; }
+h2 { font-size: clamp(32px, 4vw, 76px); line-height: 1; }
+.lead { font-size: 1.35em; line-height: 1.45; max-width: 34ch; }
+.cols { display: grid; grid-template-columns: 1.05fr 1fr; gap: 5vw; align-items: center; }
+.card { background: #ffffff08; border: 1px solid var(--line); border-radius: var(--r); padding: 1.4em 1.6em; }
+.reveal { opacity: 0; transform: translateY(26px); transition: opacity .7s, transform .7s cubic-bezier(.2,.8,.2,1); }
+.scene.in .reveal { opacity: 1; transform: none; }
+.scene.in .reveal.d1 { transition-delay: .15s; } .scene.in .reveal.d2 { transition-delay: .3s; } .scene.in .reveal.d3 { transition-delay: .45s; }
+
+/* Fixe Bedienelemente */
+#prog { position: fixed; top: 0; left: 0; height: 4px; background: var(--crema); z-index: 9; transition: width .4s; }
+#dots { position: fixed; right: 18px; top: 50%; transform: translateY(-50%); z-index: 9; display: flex; flex-direction: column; gap: 12px; }
+#dots a { width: 11px; height: 15px; border-radius: 50%; background: var(--line); display: block; transition: .3s; position: relative; }
+#dots a.on { background: var(--crema); transform: scale(1.25); }
+#dots a span { position: absolute; right: 22px; top: -4px; white-space: nowrap; font-size: 13px; background: var(--bg3); padding: 3px 9px; border-radius: 8px; opacity: 0; pointer-events: none; transition: .2s; }
+#dots a:hover span { opacity: 1; }
+#miniqr { position: fixed; right: 50px; bottom: 18px; z-index: 9; background: #fff; border-radius: 12px; padding: 7px 7px 4px; text-align: center; color: #170d08; font-size: 11px; font-weight: 700; transition: opacity .4s; }
+#miniqr img { width: 92px; height: 92px; display: block; }
+body.hide-mini #miniqr { opacity: 0; pointer-events: none; }
+#hint { position: fixed; left: 20px; bottom: 16px; font-size: 13px; color: var(--mut); z-index: 9; }
+#admin { position: fixed; left: 20px; bottom: 44px; z-index: 9; display: none; }
+#admin button { background: var(--bg3); border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px; font-size: 13px; }
+
+/* 0 · Start */
+#start .cols { grid-template-columns: 1.3fr 1fr; }
+.cup { width: min(38vw, 520px); margin-top: 2vh; }
+.steam path { fill: none; stroke: #f6ead855; stroke-width: 7; stroke-linecap: round; stroke-dasharray: 60 140; animation: steam 3.6s linear infinite; }
+.steam path:nth-child(2) { animation-delay: -1.2s; } .steam path:nth-child(3) { animation-delay: -2.4s; }
+@keyframes steam { from { stroke-dashoffset: 200; opacity: 0; } 30% { opacity: 1; } to { stroke-dashoffset: 0; opacity: 0; } }
+.crema { animation: swirl 14s linear infinite; transform-origin: 260px 150px; }
+@keyframes swirl { to { transform: rotate(360deg); } }
+.qrcard { display: flex; gap: 1.2em; align-items: center; background: #fff; color: #170d08; border-radius: var(--r); padding: 1em 1.3em; }
+.qrcard img { width: clamp(130px, 11vw, 210px); height: auto; }
+.qrcard b { color: #170d08; font-size: 1.3em; font-family: 'Fraunces', serif; }
+.qrcard .u { font-size: .8em; color: #6b5040; word-break: break-all; }
+
+/* 1 · Konsum */
+.big { font-family: 'Fraunces', serif; font-size: clamp(80px, 11vw, 220px); line-height: .9; color: var(--crema); font-weight: 700; }
+.stats { display: flex; gap: 2.4em; margin-top: 1.4em; flex-wrap: wrap; }
+.stats div b { display: block; font-family: 'Fraunces', serif; font-size: 2.1em; }
+.stats div span { color: var(--mut); font-size: .9em; }
+.stage { position: relative; min-height: 60vh; }
+.stage > * { position: absolute; inset: 0; transition: opacity .6s, transform .6s; }
+#cups canvas { width: 100%; height: 100%; }
+#cups p { position: absolute; bottom: -2.2em; left: 0; margin: 0; }
+#demand { opacity: 0; transform: scale(.96); pointer-events: none; display: flex; flex-direction: column; justify-content: center; }
+#konsum.s1 #cups { opacity: 0; transform: scale(.96); }
+#konsum.s1 #demand { opacity: 1; transform: none; pointer-events: auto; }
+#demand svg { width: 100%; max-height: 46vh; }
+#demand .ctl { margin: 6px 0; }
+.ax { stroke: var(--mut); stroke-width: 2; }
+.ln { stroke-width: 5; fill: none; stroke-linecap: round; transition: .3s; }
+
+/* 2 · Kette */
+#kette .cols { grid-template-columns: 1.25fr 1fr; gap: 3.5vw; }
+#map { width: 100%; }
+#map .land { fill: #3b2414; stroke: #5a3a22; stroke-width: 2; }
+#map .route-bg { fill: none; stroke: #ffffff18; stroke-width: 4; stroke-dasharray: 2 12; stroke-linecap: round; }
+#map .route { fill: none; stroke: var(--crema); stroke-width: 4; stroke-linecap: round; transition: stroke-dashoffset 1.1s cubic-bezier(.4,0,.2,1); }
+#map .pin circle { fill: var(--bg); stroke: var(--line); stroke-width: 3; transition: .4s; }
+#map .pin text { fill: var(--mut); font-size: 19px; font-weight: 600; transition: .4s; }
+#map .pin.done circle { stroke: var(--crema); fill: var(--crema); }
+#map .pin.o.done circle { stroke: var(--origin); fill: var(--origin); }
+#map .pin.done text { fill: var(--cream); }
+#map .lbl { fill: #ffffff30; font-family: 'Fraunces', serif; font-size: 34px; font-weight: 700; }
+#map .wave { stroke: #ffffff14; stroke-width: 2; fill: none; }
+#bean { transition: transform 1.1s cubic-bezier(.4,0,.2,1); }
+.station { min-height: 15em; }
+.station .no { color: var(--crema); font-weight: 700; letter-spacing: .1em; font-size: .85em; }
+.station h3 { font-size: 2em; margin: .2em 0 .4em; }
+.station p { line-height: 1.5; margin: 0; }
+.chip { display: inline-block; margin-top: .9em; padding: .35em .9em; border-radius: 99px; font-weight: 700; font-size: 1.15em; background: var(--north); color: #1a0d05; }
+.chip.o { background: var(--origin); color: #0f200e; }
+.stack { display: flex; height: 46px; border-radius: 12px; overflow: hidden; background: var(--bg3); margin-top: 1.4em; }
+.stack i { width: 0; transition: width .9s cubic-bezier(.2,.8,.2,1); background: var(--north); border-right: 2px solid var(--bg2); }
+.stack i.o { background: var(--origin); }
+.stack-l { display: flex; justify-content: space-between; margin-top: .5em; font-size: .9em; }
+.legend span::before { content: ''; display: inline-block; width: .8em; height: .8em; border-radius: 3px; margin-right: .4em; background: var(--north); vertical-align: -1px; }
+.legend span.o::before { background: var(--origin); }
+.final .row { display: flex; gap: 1.6em; flex-wrap: wrap; margin: .8em 0; }
+.final .row div b { display: block; font-family: 'Fraunces', serif; font-size: 2.6em; line-height: 1.05; }
+.final .row .o b { color: var(--origin); } .final .row .n b { color: var(--north); }
+
+/* 3 · Simulator */
+#sim .cols { grid-template-columns: 1fr 1.1fr; }
+.res .price { display: flex; gap: 2em; align-items: flex-end; flex-wrap: wrap; }
+.res .price div b { display: block; font-family: 'Fraunces', serif; font-size: 3.4em; line-height: 1; }
+.res .price div span { color: var(--mut); }
+.split { display: flex; height: 30px; border-radius: 9px; overflow: hidden; margin: 1.2em 0 .4em; }
+.split i { transition: width .5s; } .split .o { background: var(--origin); } .split .n { background: var(--north); }
+.gauges { display: grid; grid-template-columns: 1fr 1fr; gap: 1.4em; margin: 1.3em 0; }
+.insight { font-size: 1.2em; line-height: 1.45; min-height: 2.9em; }
+.klasse { margin-top: 1em; padding: .8em 1.1em; border-radius: 12px; background: #7fcf7a14; border: 1px dashed #7fcf7a66; }
+
+/* 4 · Kritik */
+.cards3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.4em; margin-top: 4vh; }
+.kc { opacity: .12; transform: translateY(30px) scale(.97); transition: .7s cubic-bezier(.2,.8,.2,1); }
+.kc.on { opacity: 1; transform: none; }
+.kc h3 { font-size: 1.7em; margin-bottom: .5em; }
+.kc ul { margin: 0; padding-left: 1.1em; line-height: 1.5; } .kc li { margin-bottom: .55em; }
+.kc .ic { font-size: 2.2em; }
+.balance { margin-top: 3vh; color: var(--mut); }
+
+/* 5 · Handeln */
+.tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.2em; margin-top: 4vh; }
+.tiles .card h3 { font-size: 1.35em; margin-bottom: .4em; }
+.tiles .card p { margin: 0; line-height: 1.5; }
+.cmp { margin-top: .6em; } .cmp div { display: flex; align-items: center; gap: .6em; margin: .35em 0; font-size: .9em; }
+.cmp i { height: 12px; border-radius: 6px; background: var(--north); display: block; } .cmp .h i { background: var(--fair); }
+
+/* 6 · Abstimmung + Ende */
+.merk { font-family: 'Fraunces', serif; font-size: clamp(28px, 3.3vw, 62px); line-height: 1.15; max-width: 22ch; }
+.merk em { color: var(--fair); font-style: normal; } .merk strong { color: var(--north); }
+
+@media (max-width: 900px) {
+  .cols, #start .cols, #kette .cols, #sim .cols, .cards3, .tiles { grid-template-columns: 1fr; }
+  .cup { width: 80vw; } #dots, #hint, #miniqr { display: none; } .stage { min-height: 70vh; }
+}
+</style>
+</head>
+<body>
+<div id="prog"></div>
+<nav id="dots"></nav>
+<div id="miniqr"><img src="qr-mitmachen.svg" alt="QR-Code zum Mitmachen">mitmachen</div>
+<div id="hint">→ / Leertaste: weiter · ← zurück</div>
+<div id="admin"><button id="reset">Abstimmungen zurücksetzen</button></div>
+
+<main>
+<!-- 0 · START -->
+<section class="scene" id="start" data-title="Start" data-steps="1">
+  <div class="cols">
+    <div>
+      <div class="kicker reveal">Info-Vortrag · Globaler Handel</div>
+      <h1 class="reveal d1" style="margin:.25em 0 .3em">Der Weg bis<br>zur Tasse</h1>
+      <p class="lead reveal d2">Jeden Tag trinken wir Kaffee. Aber <b>wer hat eigentlich daran verdient</b> – und wer bezahlt den Preis?</p>
+      <svg class="cup reveal d3" viewBox="0 0 520 330" aria-hidden="true">
+        <g class="steam"><path d="M200 110 C185 80 215 60 200 30 S205 -10 195 -30"/><path d="M260 110 C245 75 280 55 262 25 S268 -15 258 -35"/><path d="M320 110 C305 80 335 60 320 30 S325 -10 315 -30"/></g>
+        <ellipse cx="260" cy="292" rx="230" ry="32" fill="#e9dccb"/><ellipse cx="260" cy="286" rx="170" ry="20" fill="#d8c8b3"/>
+        <path d="M430 168 c60 -6 72 70 6 82" fill="none" stroke="#f3e9dc" stroke-width="22"/>
+        <path d="M90 140 h340 c0 80 -40 150 -170 150 S90 220 90 140z" fill="#f6efe5"/>
+        <ellipse cx="260" cy="140" rx="170" ry="34" fill="#f6efe5"/>
+        <ellipse cx="260" cy="146" rx="152" ry="26" fill="#6b3c1d"/>
+        <g class="crema"><ellipse cx="260" cy="146" rx="120" ry="18" fill="#c9905a"/><path d="M220 146 c20 -14 60 -14 80 0 c-20 10 -60 10 -80 0" fill="#ecc694"/></g>
+      </svg>
+    </div>
+    <div>
+      <div class="qrcard reveal d1"><img src="qr-mitmachen.svg" alt="QR-Code"><div><b>Handy raus!</b><br>Scannen, abstimmen &amp; selbst Kaffee-Chef sein.<div class="u" id="url1"></div></div></div>
+      <div class="card poll reveal d2" style="margin-top:1.2em"><div class="kicker">Live-Schätzung</div><h3 style="font-size:1.3em;margin:.4em 0">Von 8,06 € für 1 kg Kaffee – wie viel bekommt die Bäuerin / der Bauer?</h3><div id="poll1a"></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- 1 · KONSUM -->
+<section class="scene" id="konsum" data-title="Konsum & Nachfrage" data-steps="2">
+  <div class="cols">
+    <div>
+      <div class="kicker reveal">1 · Konsum &amp; Nachfrage</div>
+      <div class="big reveal d1"><span data-count="169">0</span> Liter</div>
+      <p class="lead reveal d2">Kaffee trinkt jede*r in Deutschland pro Jahr – im Schnitt <b>rund 4 Tassen am Tag</b>.</p>
+      <div class="stats reveal d3">
+        <div><b>79 %</b><span>trinken (fast) täglich Kaffee</span></div>
+        <div><b>Platz 10</b><span>weltweit (4,8 kg/Kopf) – Nr. 1 ist Luxemburg mit 8,5 kg</span></div>
+        <div><b>125 Mio.</b><span>Menschen leben vom Kaffee</span></div>
+      </div>
+    </div>
+    <div class="stage reveal d2">
+      <div id="cups"><canvas></canvas><p class="mut"><b id="cupn">0</b> Tassen pro Person und Jahr – jeder Punkt ist eine Tasse.</p></div>
+      <div id="demand" class="card">
+        <div class="kicker">Was heißt Nachfrage?</div>
+        <p style="margin:.4em 0 .2em;line-height:1.45">Kaffee wird an der <b>Börse</b> gehandelt. Der Preis entsteht dort, wo sich <b>Nachfrage</b> (wie viel wir kaufen wollen) und <b>Angebot</b> (wie viel geerntet wird) treffen.</p>
+        <svg viewBox="0 0 440 280">
+          <line class="ax" x1="50" y1="20" x2="50" y2="250"/><line class="ax" x1="50" y1="250" x2="430" y2="250"/>
+          <text x="10" y="18" fill="#b59a80" font-size="14">Preis</text><text x="370" y="272" fill="#b59a80" font-size="14">Menge</text>
+          <line id="dl" class="ln" stroke="#e3b77d"/><line id="sl" class="ln" stroke="#7fcf7a"/>
+          <line id="pl" stroke="#ef7d45" stroke-width="2" stroke-dasharray="6 6"/><circle id="pp" r="9" fill="#ef7d45"/>
+          <text id="dlt" fill="#e3b77d" font-size="15" font-weight="700">Nachfrage</text><text id="slt" fill="#7fcf7a" font-size="15" font-weight="700">Angebot</text>
+          <text id="ptx" x="56" fill="#ef7d45" font-size="16" font-weight="700"></text>
+        </svg>
+        <label class="ctl"><span class="lab">Nachfrage steigt (mehr Kaffeetrinker weltweit)</span><input type="range" id="dsl" min="0" max="3" step="0.1" value="0"></label>
+        <label class="ctl"><span class="lab">Missernte (Frost, Dürre, Pflanzenkrankheiten)</span><input type="range" id="ssl" min="0" max="3" step="0.1" value="0"></label>
+        <p class="mut sm" style="margin:0">→ Der Preis schwankt ständig. Für Bauern heißt das: <b>unsicheres Einkommen</b>.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 2 · KETTE -->
+<section class="scene" id="kette" data-title="Wertschöpfungskette" data-steps="8">
+  <div>
+    <div class="kicker reveal">2 · Die Wertschöpfungskette</div>
+    <h2 class="reveal d1" style="margin:.2em 0 3vh">Wo bleibt das Geld von 1 kg Kaffee?</h2>
+    <div class="cols">
+      <svg id="map" viewBox="0 0 1000 560" class="reveal d1">
+        <path class="wave" d="M400 420 q20 -10 40 0 t40 0 M470 470 q20 -10 40 0 t40 0 M520 380 q20 -10 40 0 t40 0 M430 120 q20 -10 40 0 t40 0"/>
+        <path class="land" d="M90 200 C130 150 230 150 300 190 C360 225 400 280 370 340 C340 410 300 470 250 520 C220 545 190 530 185 490 C175 430 120 400 95 340 C75 290 60 240 90 200Z"/>
+        <path class="land" d="M640 90 C700 60 800 70 870 100 C940 130 960 190 930 240 C900 290 940 330 900 380 C860 420 780 400 740 360 C700 320 660 300 650 250 C640 200 600 130 640 90Z"/>
+        <text class="lbl" x="120" y="470">Brasilien</text><text class="lbl" x="690" y="440">Deutschland</text>
+        <path id="routeBg" class="route-bg"/><path id="route" class="route"/>
+        <g id="pins"></g>
+        <g id="bean"><ellipse rx="15" ry="20" fill="#6b3c1d" stroke="#2a1408" stroke-width="2"/><path d="M-2 -15 C5 -5 -5 5 2 15" stroke="#2a1408" stroke-width="3.5" fill="none"/></g>
+      </svg>
+      <div>
+        <div class="station card" id="station"></div>
+        <div class="stack" id="stack"></div>
+        <div class="stack-l"><span class="legend"><span class="o">bleibt im Anbauland</span> &nbsp; <span>geht nach Deutschland</span></span><b id="stackSum">0,00 €</b></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 3 · SIMULATOR -->
+<section class="scene" id="sim" data-title="Simulator" data-steps="1">
+  <div>
+    <div class="kicker reveal">3 · Simulator</div>
+    <h2 class="reveal d1" style="margin:.2em 0 3vh">Stell die Weichen – was passiert mit dem Preis?</h2>
+    <div class="cols">
+      <div class="card reveal d1" id="simctl"></div>
+      <div class="res reveal d2">
+        <div class="price"><div><b id="rKg">8,06 €</b><span>pro kg im Laden</span></div><div><b id="rCup">6,4 ct</b><span>Kaffee pro Tasse</span></div><div><b id="rBauer" style="color:var(--origin)">0,41 €</b><span>für die Bäuerin / kg</span></div></div>
+        <div class="split"><i class="o" id="rO"></i><i class="n" id="rN"></i></div>
+        <div class="stack-l"><span class="legend"><span class="o" id="rOl"></span> &nbsp; <span id="rNl"></span></span></div>
+        <div class="gauges"><div id="gFair"></div><div id="gEco"></div></div>
+        <p class="insight" id="rIns"></p>
+        <div class="klasse" id="klasse1">Eure Handys: noch keine Ergebnisse – baut eure eigene Tasse unter „mitmachen“!</div>
+        <p class="mut sm">Vereinfachtes Modell: Basiswerte aus der Quelle, Aufschläge für Fairtrade, Bio und Zoll geschätzt.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 4 · KRITIK -->
+<section class="scene" id="kritik" data-title="Kritik" data-steps="3">
+  <div>
+    <div class="kicker reveal">4 · Kritik am Kaffeekonsum</div>
+    <h2 class="reveal d1" style="margin-top:.2em">Der wahre Preis einer Tasse</h2>
+    <div class="cards3">
+      <div class="card kc"><div class="ic">🌳</div><h3>Umwelt</h3><ul>
+        <li><b>13 Mio. Hektar</b> Kaffeefelder – so groß wie England</li>
+        <li>20 Jahre lang je <b>≈ 130.000 ha Wald</b> pro Jahr gerodet – oft in artenreichen Gebieten</li>
+        <li><b>38 Mio. kg Pestizide</b> pro Jahr allein in Brasilien</li>
+        <li>Eine Tasse schwarzer Kaffee: <b>280 l Wasser</b> und <b>0,35 kg CO₂</b></li></ul></div>
+      <div class="card kc"><div class="ic">🧑‍🌾</div><h3>Menschen</h3><ul>
+        <li>Mind. <b>5,5 Mio. Kaffeebauern</b> leben unter der Armutsgrenze (3,20 $ am Tag)</li>
+        <li><b>Kinder- und Zwangsarbeit</b>: laut ILO einer der Sektoren mit den meisten Kinderarbeitenden</li>
+        <li>Pestizide machen krank: Atemwege, Haut, Herz, Krebs</li>
+        <li><b>Landraub</b>: 2001 wurden in Uganda ca. 4.000 Menschen für eine Plantage vertrieben</li></ul></div>
+      <div class="card kc"><div class="ic">⚖️</div><h3>System</h3><ul>
+        <li><b>Nord-Süd-Gefälle</b>: ≈ 88 % des Ladenpreises bleiben in Deutschland</li>
+        <li><b>Zolleskalation</b>: Rohkaffee zollfrei, Röstkaffee 7,5 % Zoll → geröstet wird im Norden</li>
+        <li>Der <b>Börsenpreis</b> schwankt – das Risiko tragen die Bauern</li>
+        <li><b>Koloniales Erbe</b>: Kaffee trieb vom 16. bis 19. Jh. den Sklavenhandel an</li></ul></div>
+    </div>
+    <p class="balance reveal d3">Fairerweise: Für Rinder und Soja wird deutlich mehr Wald gerodet – Kaffee trifft aber besonders artenreiche Gebiete.</p>
+  </div>
+</section>
+
+<!-- 5 · HANDELN -->
+<section class="scene" id="handeln" data-title="Was tun?" data-steps="1">
+  <div>
+    <div class="kicker reveal">5 · Was können wir tun?</div>
+    <h2 class="reveal d1" style="margin-top:.2em">Kleine Entscheidungen, große Kette</h2>
+    <div class="tiles">
+      <div class="card reveal d1"><h3>🏷️ Siegel beachten</h3><p><b>Fairtrade</b>: Mindestpreis + Prämie für die Gemeinschaft. <b>Bio</b>: keine chemisch-synthetischen Pestizide. <b>Rainforest Alliance</b>: Umwelt- und Sozialstandards.</p><p class="mut sm" style="margin-top:.6em">Aber: Siegel garantieren keinen existenzsichernden Lohn – und die Zertifizierung kostet die Bauern selbst Geld.</p></div>
+      <div class="card reveal d2"><h3>🔥 Im Anbauland geröstet</h3><p>Direkthandel oder Kaffee, der im Ursprungsland geröstet wird: So bleibt <b>mehr Wertschöpfung vor Ort</b>.</p></div>
+      <div class="card reveal d3"><h3>🥛 Milch bewusst wählen</h3><p>Latte macchiato, CO₂ pro Glas:</p>
+        <div class="cmp"><div><i style="width:170px"></i>Kuhmilch 0,85 kg</div><div class="h"><i style="width:94px"></i>Hafermilch 0,47 kg</div></div></div>
+      <div class="card reveal d1"><h3>🗑️ Nichts wegwerfen</h3><p>Verluste entlang der Kette verursachen <b>≈ 11,5 kg CO₂ pro kg</b> Kaffee – fast so viel wie der ganze Anbau (10,75 kg).</p></div>
+      <div class="card reveal d2"><h3>☕ Weniger, aber besser</h3><p>Lieber bewusst genießen und etwas mehr für faire Qualität zahlen.</p></div>
+      <div class="card reveal d3"><h3>🗳️ Politik</h3><p>Lieferkettengesetze und das EU-Gesetz gegen Entwaldung sollen Firmen verpflichten, auf Menschenrechte und Wald zu achten.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 6 · ABSTIMMUNG -->
+<section class="scene" id="abst" data-title="Abstimmung" data-steps="1">
+  <div class="cols">
+    <div>
+      <div class="kicker reveal">6 · Eure Meinung</div>
+      <h2 class="reveal d1" style="margin:.2em 0 .5em">Würdet ihr mehr zahlen?</h2>
+      <div class="card poll reveal d2"><h3 style="font-size:1.25em;margin-bottom:.4em">Wie viel mehr würdest du pro Tasse für wirklich fairen Kaffee zahlen?</h3><div id="poll2"></div></div>
+      <div class="klasse reveal d3" id="klasse2"></div>
+    </div>
+    <div class="reveal d2">
+      <p class="mut">Zur Erinnerung: Doppelter Lohn für die Bäuerin macht die Tasse nur um etwa <b id="dbl"></b> teurer.</p>
+      <div class="qrcard" style="margin-top:1em"><img src="qr-mitmachen.svg" alt="QR-Code"><div><b>Noch nicht abgestimmt?</b><br>Jetzt scannen!</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- 7 · ENDE -->
+<section class="scene" id="ende" data-title="Fazit & Lernzettel" data-steps="1">
+  <div class="cols">
+    <div>
+      <div class="kicker reveal">Fazit</div>
+      <p class="merk reveal d1" style="margin:.4em 0">Der Kaffee wächst <em>im Süden</em> –<br>das Geld wird <strong>im Norden</strong> verdient.</p>
+      <p class="lead reveal d2">Wir entscheiden mit, wie fair die Kette ist: beim Einkauf, beim Konsum und in der Politik.</p>
+      <p class="mut sm reveal d3">Quelle: regenwald-schuetzen.org (OroVerde) – „Kaffee“ · Zoll: EU-Zolltarif</p>
+    </div>
+    <div class="reveal d2">
+      <div class="qrcard"><img src="qr-lernzettel.svg" alt="QR-Code Lernzettel"><div><b>Lernzettel als PDF</b><br>Alles Wichtige auf einer Seite – zum Speichern.</div></div>
+      <div class="card" style="margin-top:1.2em"><b class="serif" style="font-size:1.3em">Quiz auf dem Handy</b><p style="margin:.4em 0 0">Unter „mitmachen“ warten 6 Fragen – wer schafft alle?</p></div>
+    </div>
+  </div>
+</section>
+</main>
+
+<script src="shared.js"></script>
+<script>
+const $ = (s, r = document) => r.querySelector(s), $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const SITE = location.href.replace(/[^/]*([?#].*)?$/, '');
+$('#url1').textContent = SITE.replace(/^https?:\/\//, '') + 'mitmachen.html';
+const scenes = $$('.scene');
+const sub = Object.fromEntries(scenes.map(s => [s.id, 0]));
+let cur = 0, latest = null;
+
+// Navigation
+$('#dots').innerHTML = scenes.map((s, i) => `<a href="#${s.id}" data-i="${i}"><span>${s.dataset.title}</span></a>`).join('');
+const io = new IntersectionObserver(es => es.forEach(e => {
+  if (e.isIntersecting && e.intersectionRatio > .55) { cur = scenes.indexOf(e.target); enter(e.target); }
+}), { threshold: [.55] });
+scenes.forEach(s => io.observe(s));
+function enter(s) {
+  s.classList.add('in');
+  $$('#dots a').forEach((a, i) => a.classList.toggle('on', i === cur));
+  $('#prog').style.width = (cur / (scenes.length - 1) * 100) + '%';
+  document.body.classList.toggle('hide-mini', ['start', 'abst', 'ende'].includes(s.id));
+  if (s.id === 'konsum') countUp();
+  render(s.id);
+}
+function go(i) { cur = Math.max(0, Math.min(scenes.length - 1, i)); scenes[cur].scrollIntoView({ behavior: 'smooth' }); }
+function step(d) {
+  const s = scenes[cur], n = +s.dataset.steps;
+  if (d > 0 && sub[s.id] < n - 1) { sub[s.id]++; render(s.id); return; }
+  if (d < 0 && sub[s.id] > 0) { sub[s.id]--; render(s.id); return; }
+  go(cur + d);
+}
+addEventListener('keydown', e => {
+  if (e.target.tagName === 'INPUT') return;
+  if (['ArrowRight', 'ArrowDown', 'PageDown', ' ', 'Enter'].includes(e.key)) { e.preventDefault(); step(1); }
+  if (['ArrowLeft', 'ArrowUp', 'PageUp'].includes(e.key)) { e.preventDefault(); step(-1); }
+});
+function render(id) {
+  const k = sub[id];
+  if (id === 'konsum') $('#konsum').classList.toggle('s1', k >= 1);
+  if (id === 'kette') chain(k);
+  if (id === 'kritik') $$('.kc').forEach((c, i) => c.classList.toggle('on', i <= k));
+}
+
+// 1 · Konsum: Zähler + Tassen-Punkte
+let counted = false;
+function countUp() {
+  if (counted) return; counted = true;
+  const el = $('[data-count]'), cv = $('#cups canvas'), N = 1460;
+  const t0 = performance.now();
+  const r = cv.getBoundingClientRect(), dpr = devicePixelRatio || 1;
+  cv.width = r.width * dpr; cv.height = r.height * dpr;
+  const c = cv.getContext('2d'); c.scale(dpr, dpr);
+  const cols = Math.ceil(Math.sqrt(N * r.width / r.height)), rows = Math.ceil(N / cols);
+  const cw = r.width / cols, ch = r.height / rows, rad = Math.min(cw, ch) * .36;
+  (function f(t) {
+    const p = Math.min(1, (t - t0) / 2600), e = 1 - Math.pow(1 - p, 3);
+    el.textContent = Math.round(169 * e); $('#cupn').textContent = Math.round(N * e).toLocaleString('de-DE');
+    c.clearRect(0, 0, r.width, r.height);
+    const n = Math.round(N * e);
+    for (let i = 0; i < N; i++) {
+      c.beginPath(); c.fillStyle = i < n ? (i % 365 < 4 ? '#ef7d45' : '#e3b77d') : '#33200f';
+      c.arc((i % cols + .5) * cw, (Math.floor(i / cols) + .5) * ch, rad, 0, 7); c.fill();
+    }
+    if (p < 1) requestAnimationFrame(f);
+  })(t0);
+}
+// Angebot / Nachfrage
+function demand() {
+  const d = +$('#dsl').value, s = +$('#ssl').value;
+  const X = q => 50 + q * 36, Y = p => 250 - p * 21;
+  // Nachfrage P = 10 - Q + d ; Angebot P = Q + s
+  const line = (el, q1, p1, q2, p2) => { el.setAttribute('x1', X(q1)); el.setAttribute('y1', Y(p1)); el.setAttribute('x2', X(q2)); el.setAttribute('y2', Y(p2)); };
+  const dq = Math.max(0, d - 1), se = Math.min(10, 11 - s);
+  line($('#dl'), dq, 10 + d - dq, 10, d); line($('#sl'), 0, s, se, se + s);
+  const Q = (10 + d - s) / 2, P = (10 + d + s) / 2;
+  const pl = $('#pl'); pl.setAttribute('x1', 50); pl.setAttribute('x2', X(Q)); pl.setAttribute('y1', Y(P)); pl.setAttribute('y2', Y(P));
+  $('#pp').setAttribute('cx', X(Q)); $('#pp').setAttribute('cy', Y(P));
+  $('#ptx').setAttribute('y', Y(P) - 10); $('#ptx').textContent = 'Weltmarktpreis ' + (P > 5.05 ? '↑ +' + Math.round((P / 5 - 1) * 100) + ' %' : '');
+  $('#dlt').setAttribute('x', X(10) - 70); $('#dlt').setAttribute('y', Y(d) - 10);
+  $('#slt').setAttribute('x', X(se) - 30); $('#slt').setAttribute('y', Y(se + s) + 22);
+}
+$('#dsl').oninput = $('#ssl').oninput = demand; demand();
+
+// 2 · Kette
+const ST = [
+  { p: [170, 330], t: 'Plantage', h: 'Anbau & Ernte', x: 'Kaffee wächst im <b>Kaffeegürtel</b> rund um den Äquator, in über 80 Ländern. Die erste Ernte gibt es erst nach 3–4 Jahren. Gepflückt wird per Hand (gut, aber mühsam) oder per Maschine (schnell, schadet aber Qualität und Bäumen). Für 1 kg Röstkaffee braucht man <b>7–8 kg Kaffeekirschen</b>.' },
+  { p: [255, 255], t: 'Aufbereitung', h: 'Aufbereitung & Zwischenhandel', x: 'Fruchtfleisch weg, Bohnen trocknen: <b>trocken, „honey“ oder nass</b> – das prägt den Geschmack. Zwischenhändler kaufen die Bohnen bei den Bauern auf.' },
+  { p: [345, 300], t: 'Hafen', h: 'Export', x: 'Als <b>grüner Rohkaffee</b> geht es per Containerschiff über den Atlantik – z. B. nach Hamburg, einem der wichtigsten Kaffeehäfen Europas.' },
+  { p: [700, 175], t: 'Rösterei', h: 'Rösten in Deutschland', x: 'Geröstet wird meist <b>erst hier</b>, bei 200–220 °C. Warum? Rohkaffee ist in der EU zollfrei, Röstkaffee nicht (7,5 % Zoll). So bleibt dieser Teil der Wertschöpfung im Norden.' },
+  { p: [790, 240], t: 'Steuer', h: 'Kaffeesteuer', x: 'Deutschland erhebt eine eigene <b>Kaffeesteuer: 2,19 € pro kg</b> Röstkaffee. Das Geld geht an den Staat.' },
+  { p: [860, 310], t: 'Supermarkt', h: 'Handel & Verkauf', x: 'Groß- und Einzelhandel verdienen am Verkauf im Laden.' },
+  { p: [810, 375], t: 'Sonstiges', h: 'Und der Rest?', x: 'Mehrwertsteuer, Transport im Inland, Verpackung, Werbung … – in der Quelle nicht einzeln aufgeschlüsselt.' },
+];
+const routeD = 'M170 330 Q205 285 255 255 T345 300 C420 360 560 120 700 175 Q760 195 790 240 Q830 270 860 310 Q850 350 810 375';
+$('#route').setAttribute('d', routeD); $('#routeBg').setAttribute('d', routeD);
+const R = $('#route'), RL = R.getTotalLength();
+R.style.strokeDasharray = RL; R.style.strokeDashoffset = RL;
+const stLen = ST.map(s => { let best = 0, bd = 1e9; for (let l = 0; l <= RL; l += 2) { const q = R.getPointAtLength(l), dd = (q.x - s.p[0]) ** 2 + (q.y - s.p[1]) ** 2; if (dd < bd) { bd = dd; best = l; } } return best; });
+$('#pins').innerHTML = ST.map((s, i) => `<g class="pin${PRICE[i].o ? ' o' : ''}" transform="translate(${s.p})"><circle r="12"/><text x="${i >= 3 ? 20 : -20}" y="-16" text-anchor="${i >= 3 ? 'start' : 'end'}">${s.t}</text></g>`).join('');
+$('#stack').innerHTML = PRICE.map(p => `<i class="${p.o ? 'o' : ''}" title="${p.n}"></i>`).join('');
+const TOTAL = PRICE.reduce((a, p) => a + p.v, 0);
+let anim = null;
+function moveBean(toLen) {
+  cancelAnimationFrame(anim);
+  const b = $('#bean'), from = +(b.dataset.l || 0), t0 = performance.now();
+  (function f(t) { const p = Math.min(1, (t - t0) / 1100), e = p < .5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2, l = from + (toLen - from) * e, q = R.getPointAtLength(l);
+    b.setAttribute('transform', `translate(${q.x},${q.y - 26})`); b.dataset.l = l; if (p < 1) anim = requestAnimationFrame(f); })(t0);
+}
+function chain(k) {
+  const last = Math.min(k, ST.length - 1);
+  R.style.strokeDashoffset = RL - stLen[last];
+  moveBean(stLen[last]);
+  $$('#pins .pin').forEach((p, i) => p.classList.toggle('done', i <= k));
+  $$('#stack i').forEach((s, i) => s.style.width = (i <= k ? PRICE[i].v / TOTAL * 100 : 0) + '%');
+  const sum = PRICE.slice(0, last + 1).reduce((a, p) => a + p.v, 0);
+  $('#stackSum').textContent = eur(k >= ST.length ? TOTAL : sum);
+  const el = $('#station');
+  if (k < ST.length) {
+    const p = PRICE[k];
+    el.innerHTML = `<div class="no">STATION ${k + 1} / ${ST.length}</div><h3>${ST[k].h}</h3><p>${ST[k].x}</p><span class="chip${p.o ? ' o' : ''}">+ ${eur(p.v)} · ${p.n}</span>`;
+  } else {
+    const o = PRICE.filter(p => p.o).reduce((a, p) => a + p.v, 0);
+    let guess = '';
+    if (latest) { const v = latest.votes.p1, n = v.reduce((a, b) => a + b, 0); if (n) { const top = v.indexOf(Math.max(...v)); guess = `<p class="mut" style="margin-top:.6em">Eure häufigste Schätzung war <b>${POLLS.p1.o[top]}</b> – ${top === 0 ? 'richtig! 🎉' : 'die Wahrheit ist viel weniger.'} (${Math.round(v[0] / n * 100)} % lagen richtig)</p>`; } }
+    el.innerHTML = `<div class="final"><div class="no">DIE AUFLÖSUNG</div><h3>Für die Bäuerin bleiben 41 Cent.</h3>
+      <div class="row"><div class="o"><b>${fmt(PRICE[0].v / TOTAL * 100, 0)} %</b>Bäuerin</div><div class="o"><b>${fmt(o / TOTAL * 100, 0)} %</b>im Anbauland</div><div class="n"><b>${fmt((1 - o / TOTAL) * 100, 0)} %</b>in Deutschland</div></div>
+      <p>Allein die Kaffeesteuer ist <b>über 5-mal so hoch</b> wie das, was die Bäuerin bekommt.</p>${guess}</div>`;
+  }
+}
+
+// 3 · Simulator
+$('#simctl').innerHTML = simControls();
+bindSim($('#simctl'), (o, m) => {
+  $('#rKg').textContent = eur(m.total); $('#rCup').textContent = fmt(m.cup * 100, 1) + ' ct'; $('#rBauer').textContent = eur(m.bauer);
+  $('#rO').style.width = m.share * 100 + '%'; $('#rN').style.width = (1 - m.share) * 100 + '%';
+  $('#rOl').textContent = 'Anbauland ' + fmt(m.share * 100, 0) + ' %'; $('#rNl').textContent = 'Deutschland ' + fmt((1 - m.share) * 100, 0) + ' %';
+  gauge($('#gFair'), m.fair, 'Fair-o-Meter'); gauge($('#gEco'), m.eco, 'Umwelt-o-Meter');
+  $('#rIns').innerHTML = insight(m);
+});
+$('#dbl').textContent = fmt((model({ ...BASE, lohn: 2 }).cup - model(BASE).cup) * 100, 1) + ' ct';
+
+// Live-Daten
+function pollHTML(key, counts, reveal) {
+  const n = counts.reduce((a, b) => a + b, 0), mx = Math.max(1, ...counts);
+  return POLLS[key].o.map((t, i) => `<div class="opt${reveal && i === POLLS[key].right ? ' right' : ''}"><div class="t"><span>${t}</span><span>${n ? Math.round(counts[i] / n * 100) : 0} %</span></div><div class="b"><i style="width:${counts[i] / mx * 100}%"></i></div></div>`).join('') + `<div class="n">${n} Stimme${n === 1 ? '' : 'n'}</div>`;
+}
+function klasse(s) {
+  return s.n ? `<b>Eure ${s.n} Handy-Tassen</b>: Ø Fair-o-Meter <b>${Math.round(s.fair)}</b> · Ø Tasse <b>${fmt(s.cup * 100, 1)} ct</b> · Ø Bäuerin <b>${eur(s.farmer)}</b>/kg` : 'Eure Handys: noch keine Simulator-Ergebnisse – baut eure eigene Tasse unter „mitmachen“!';
+}
+async function refresh() {
+  try {
+    latest = await api('/state');
+    $('#poll1a').innerHTML = pollHTML('p1', latest.votes.p1, false);
+    $('#poll2').innerHTML = pollHTML('p2', latest.votes.p2, false);
+    $('#klasse1').innerHTML = $('#klasse2').innerHTML = klasse(latest.sim);
+  } catch { $('#poll1a').innerHTML = $('#poll1a').innerHTML || '<p class="mut">Live-Abstimmung gerade nicht erreichbar.</p>'; }
+}
+refresh(); setInterval(() => { if (!document.hidden) refresh(); }, 2000);
+
+const key = new URLSearchParams(location.search).get('admin');
+if (key) { $('#admin').style.display = 'block'; $('#reset').onclick = async () => { if (confirm('Alle Stimmen löschen?')) { await fetch(API + '/reset?key=' + encodeURIComponent(key), { method: 'POST' }); refresh(); } }; }
+</script>
+</body>
+</html>

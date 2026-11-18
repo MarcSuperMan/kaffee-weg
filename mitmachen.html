@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#170d08">
+<title>Mitmachen · Der Weg bis zur Tasse</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<style>
+body { font-size: 16px; padding: 0 16px 60px; max-width: 640px; margin: 0 auto; }
+header { padding: 28px 0 10px; text-align: center; }
+header h1 { font-size: 34px; margin: 10px 0 6px; }
+header .bean { font-size: 22px; }
+nav.tabs { position: sticky; top: 0; z-index: 5; background: var(--bg); display: flex; gap: 6px; overflow-x: auto; padding: 10px 0; margin: 0 -16px; padding-left: 16px; padding-right: 16px; scrollbar-width: none; }
+nav.tabs a { flex: none; text-decoration: none; color: var(--cream); background: var(--bg3); border: 1px solid var(--line); padding: 7px 13px; border-radius: 99px; font-size: 14px; font-weight: 600; }
+section { background: var(--bg2); border: 1px solid var(--line); border-radius: var(--r); padding: 20px 18px; margin: 16px 0; scroll-margin-top: 64px; }
+section h2 { font-size: 24px; margin: 4px 0 12px; }
+.vote button { display: block; width: 100%; text-align: left; background: var(--bg3); border: 1px solid var(--line); border-radius: 14px; padding: 15px 16px; margin: 8px 0; font-weight: 600; font-size: 17px; transition: .2s; }
+.vote button:active { transform: scale(.98); }
+.vote button.me { background: var(--crema); color: var(--bg); }
+.done { margin-top: 10px; color: var(--fair); font-weight: 600; }
+.res { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 14px 0; }
+.res div { background: var(--bg3); border-radius: 14px; padding: 12px; }
+.res b { display: block; font-family: 'Fraunces', serif; font-size: 26px; }
+.res span { font-size: 13px; color: var(--mut); }
+.split { display: flex; height: 18px; border-radius: 7px; overflow: hidden; margin: 6px 0; } .split i { transition: width .5s; }
+.split .o { background: var(--origin); } .split .n { background: var(--north); }
+.gauges > div { margin: 12px 0; }
+.btn { display: block; width: 100%; text-align: center; background: var(--crema); color: var(--bg); border: 0; border-radius: 14px; padding: 15px; font-weight: 700; font-size: 17px; text-decoration: none; margin-top: 12px; }
+.btn.alt { background: var(--bg3); color: var(--cream); border: 1px solid var(--line); }
+.btn:disabled { opacity: .5; }
+.cupsel { display: flex; flex-wrap: wrap; gap: 6px; }
+.cupsel button { background: var(--bg3); border: 1px solid var(--line); border-radius: 99px; padding: 8px 12px; font-size: 14px; }
+.cupsel button.on { background: var(--crema); color: var(--bg); }
+.q { margin: 16px 0 22px; } .q p { font-weight: 600; margin: 0 0 8px; }
+.q button { display: block; width: 100%; text-align: left; background: var(--bg3); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; margin: 6px 0; }
+.q button.ok { background: #7fcf7a33; border-color: var(--fair); } .q button.no { background: #e85d4a33; border-color: var(--bad); }
+.q .why { font-size: 14px; color: var(--mut); margin-top: 6px; }
+#score { font-family: 'Fraunces', serif; font-size: 22px; text-align: center; }
+</style>
+</head>
+<body>
+<header><span class="bean"></span><h1>Der Weg bis zur Tasse</h1><p class="mut" style="margin:0">Mitmachen – alles läuft live an der Tafel mit.</p></header>
+<nav class="tabs"><a href="#a1">① Schätzen</a><a href="#a2">② Deine Tasse</a><a href="#a3">③ Abstimmen</a><a href="#a4">④ Quiz</a><a href="#lernzettel">⑤ Lernzettel</a></nav>
+
+<section id="a1"><div class="kicker">① Schätzfrage</div><h2 id="p1q"></h2><div class="vote" data-poll="p1"></div></section>
+
+<section id="a2"><div class="kicker">② Simulator</div><h2>Bau deine eigene Tasse</h2>
+  <p class="mut sm" style="margin-top:-4px">Du entscheidest über die Lieferkette. Was kostet die Tasse – und wer verdient?</p>
+  <div id="simctl"></div>
+  <div class="res"><div><b id="rCup"></b><span>Kaffee pro Tasse</span></div><div><b id="rBauer" style="color:var(--origin)"></b><span>Bäuerin pro kg</span></div><div><b id="rKg"></b><span>Preis pro kg</span></div><div><b id="rShare" style="color:var(--origin)"></b><span>bleibt im Anbauland</span></div></div>
+  <div class="split"><i class="o" id="rO"></i><i class="n" id="rN"></i></div>
+  <div class="gauges"><div id="gFair"></div><div id="gEco"></div></div>
+  <p id="rIns" style="line-height:1.45"></p>
+  <button class="btn" id="send">An die Tafel schicken</button>
+  <p class="mut sm">Vereinfachtes Modell: Basiswerte aus regenwald-schuetzen.org, Aufschläge geschätzt.</p>
+  <hr style="border:0;border-top:1px solid var(--line);margin:20px 0">
+  <h3 style="font-size:19px;margin-bottom:8px">Und deine Lieblingstasse?</h3>
+  <div class="cupsel" id="cupsel"></div>
+  <p id="cupout" style="line-height:1.5"></p>
+</section>
+
+<section id="a3"><div class="kicker">③ Abstimmung</div><h2 id="p2q"></h2><div class="vote" data-poll="p2"></div></section>
+
+<section id="a4"><div class="kicker">④ Quiz</div><h2>Hast du aufgepasst?</h2><div id="quiz"></div><div id="score"></div></section>
+
+<section id="lernzettel"><div class="kicker">⑤ Lernzettel</div><h2>Alles auf einer Seite</h2>
+  <p>Begriffe, Wertschöpfungskette, Preisaufteilung, Kritik und Lösungen – zum Lernen und Speichern.</p>
+  <a class="btn" href="lernzettel.pdf" download>Lernzettel als PDF</a>
+  <a class="btn alt" href="lernzettel.html">Im Browser ansehen</a>
+</section>
+
+<script src="shared.js"></script>
+<script>
+const $ = (s, r = document) => r.querySelector(s), $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const ls = { get: k => { try { return localStorage.getItem(k); } catch { return null; } }, set: (k, v) => { try { localStorage.setItem(k, v); } catch {} } };
+
+// Abstimmungen
+$('#p1q').textContent = POLLS.p1.q; $('#p2q').textContent = POLLS.p2.q;
+$$('.vote').forEach(box => {
+  const key = box.dataset.poll, mine = ls.get('kw-' + key);
+  box.innerHTML = POLLS[key].o.map((t, i) => `<button data-i="${i}"${mine == i ? ' class="me"' : ''}>${t}</button>`).join('') + `<div class="done">${mine !== null ? 'Abgestimmt ✔ – schau an die Tafel!' : ''}</div>`;
+  box.addEventListener('click', async e => {
+    const b = e.target.closest('button'); if (!b || ls.get('kw-' + key) !== null) return;
+    $$('button', box).forEach(x => x.disabled = true);
+    try { await api('/vote', { poll: key, opt: +b.dataset.i }); ls.set('kw-' + key, b.dataset.i); b.classList.add('me'); $('.done', box).textContent = 'Abgestimmt ✔ – schau an die Tafel!'; }
+    catch { $('.done', box).textContent = 'Hat nicht geklappt – nochmal versuchen.'; $$('button', box).forEach(x => x.disabled = false); }
+  });
+});
+
+// Simulator
+let lastM;
+$('#simctl').innerHTML = simControls();
+bindSim($('#simctl'), (o, m) => {
+  lastM = m;
+  $('#rCup').textContent = fmt(m.cup * 100, 1) + ' ct'; $('#rBauer').textContent = eur(m.bauer); $('#rKg').textContent = eur(m.total); $('#rShare').textContent = fmt(m.share * 100, 0) + ' %';
+  $('#rO').style.width = m.share * 100 + '%'; $('#rN').style.width = (1 - m.share) * 100 + '%';
+  gauge($('#gFair'), m.fair, 'Fair-o-Meter'); gauge($('#gEco'), m.eco, 'Umwelt-o-Meter');
+  $('#rIns').innerHTML = insight(m);
+});
+const sent = () => { $('#send').disabled = true; $('#send').textContent = 'Geschickt ✔ – an der Tafel siehst du den Klassenschnitt'; };
+if (ls.get('kw-sim')) sent();
+$('#send').onclick = async () => {
+  $('#send').disabled = true;
+  try { await api('/sim', { fair: lastM.fair, cup: +lastM.cup.toFixed(4), farmer: +lastM.bauer.toFixed(3) }); ls.set('kw-sim', 1); sent(); }
+  catch { $('#send').disabled = false; $('#send').textContent = 'Fehler – nochmal tippen'; }
+};
+
+// Deine Tasse: CO2 + Wasser (Quelle: regenwald-schuetzen.org)
+const CUPS = [
+  { n: 'Schwarzer Kaffee', co2: .35, w: '280 l' }, { n: 'Espresso', co2: .16 },
+  { n: 'Cappuccino (Kuhmilch)', co2: .35, w: '260 l' }, { n: 'Cappuccino (Hafer)', co2: .21 },
+  { n: 'Latte (Kuhmilch)', co2: .85, w: '620 l' }, { n: 'Latte (Hafer)', co2: .47, w: 'weniger als die Hälfte' },
+];
+$('#cupsel').innerHTML = CUPS.map((c, i) => `<button data-i="${i}">${c.n}</button>`).join('');
+$('#cupsel').onclick = e => {
+  const b = e.target.closest('button'); if (!b) return;
+  $$('#cupsel button').forEach(x => x.classList.toggle('on', x === b));
+  const c = CUPS[+b.dataset.i], yr = c.co2 * 4 * 365;
+  $('#cupout').innerHTML = `<b>${fmt(c.co2)} kg CO₂</b> pro Tasse${c.w ? ` · Wasser: <b>${c.w}</b>` : ''}.<br>Bei 4 Tassen am Tag sind das <b>${fmt(yr, 0)} kg CO₂</b> im Jahr.`;
+};
+
+// Quiz
+const QUIZ = [
+  ['Wie viel bekommt die Bäuerin von 8,06 € pro kg Kaffee?', ['41 Cent', '1,39 €', '2,19 €', '4,00 €'], 0, 'Nur etwa 5 % des Ladenpreises.'],
+  ['Welcher Posten ist beim Kaffeepreis in Deutschland am größten (laut Aufteilung)?', ['Rösterei', 'Kaffeesteuer', 'Bäuerin', 'Export'], 1, 'Die Kaffeesteuer beträgt 2,19 € pro kg.'],
+  ['Was ist eine Wertschöpfungskette?', ['Eine Kette von Supermärkten', 'Alle Stufen vom Rohstoff bis zum Endprodukt, auf denen Wert dazukommt', 'Ein Siegel für fairen Handel', 'Die Route eines Schiffs'], 1, 'Anbau → Aufbereitung → Export → Rösten → Handel → Tasse.'],
+  ['Warum wird Kaffee meist in Deutschland geröstet?', ['Hier ist es wärmer', 'Röstkaffee kostet in der EU Zoll, Rohkaffee nicht', 'Weil es so vorgeschrieben ist', 'Die Bohnen verderben sonst'], 1, 'Zolleskalation: Verarbeitete Ware wird höher verzollt.'],
+  ['Wie viel Wasser steckt in einer Tasse schwarzem Kaffee?', ['2 Liter', '25 Liter', '280 Liter', '2.000 Liter'], 2, 'Fast alles davon beim Anbau.'],
+  ['Welches Land produziert den meisten Kaffee?', ['Kolumbien', 'Äthiopien', 'Vietnam', 'Brasilien'], 3, 'Brasilien: rund 39 % der Weltproduktion.'],
+];
+let pts = 0, answered = 0;
+$('#quiz').innerHTML = QUIZ.map((q, i) => `<div class="q" data-q="${i}"><p>${i + 1}. ${q[0]}</p>${q[1].map((a, j) => `<button data-a="${j}">${a}</button>`).join('')}<div class="why"></div></div>`).join('');
+$('#quiz').onclick = e => {
+  const b = e.target.closest('button'), box = b && b.closest('.q'); if (!b || box.dataset.done) return;
+  const q = QUIZ[+box.dataset.q], ok = +b.dataset.a === q[2];
+  box.dataset.done = 1; answered++; if (ok) pts++;
+  b.classList.add(ok ? 'ok' : 'no'); $$('button', box)[q[2]].classList.add('ok');
+  $('.why', box).textContent = (ok ? 'Richtig! ' : 'Leider falsch. ') + q[3];
+  if (answered === QUIZ.length) $('#score').textContent = `${pts} / ${QUIZ.length} richtig ${pts === QUIZ.length ? '🏆' : pts >= 4 ? '☕' : '– schau in den Lernzettel!'}`;
+};
+</script>
+</body>
+</html>

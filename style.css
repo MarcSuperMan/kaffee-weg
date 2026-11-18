@@ -1,0 +1,40 @@
+:root {
+  --bg: #170d08; --bg2: #24150d; --bg3: #33200f; --line: #4a3020;
+  --cream: #f6ead8; --crema: #e3b77d; --mut: #b59a80;
+  --fair: #7fcf7a; --origin: #7fcf7a; --north: #c8834a; --hot: #ef7d45; --bad: #e85d4a;
+  --r: 18px;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--bg); color: var(--cream); font-family: 'Inter', system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+h1, h2, h3, .serif { font-family: 'Fraunces', Georgia, serif; font-weight: 600; letter-spacing: -.01em; margin: 0; }
+b { color: var(--crema); }
+.mut { color: var(--mut); } .sm { font-size: .85em; }
+button { font: inherit; color: inherit; cursor: pointer; }
+.kicker { text-transform: uppercase; letter-spacing: .18em; font-size: .78rem; color: var(--crema); font-weight: 600; }
+
+/* Bohne als Motiv */
+.bean { width: 1em; height: 1.35em; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #8a5530, #4a2814 70%); position: relative; display: inline-block; box-shadow: 0 4px 14px #0008; }
+.bean::after { content: ''; position: absolute; left: 47%; top: 12%; height: 76%; width: 9%; border-radius: 40%; background: #2a1408; transform: rotate(8deg); }
+
+/* Simulator-Steuerung */
+.ctl { display: block; margin: 0 0 18px; }
+.ctl .lab { display: flex; justify-content: space-between; gap: 8px; font-weight: 600; margin-bottom: 8px; }
+.seg { display: flex; flex-wrap: wrap; gap: 6px; }
+.seg button, .tg { background: var(--bg3); border: 1px solid var(--line); border-radius: 999px; padding: 8px 14px; transition: .2s; }
+.seg button.on { background: var(--crema); color: var(--bg); border-color: var(--crema); }
+.tg.on { background: var(--fair); color: #102010; border-color: var(--fair); }
+.toggles { display: flex; flex-wrap: wrap; gap: 8px; }
+.landinfo { min-height: 2.6em; margin: 8px 0 0; }
+input[type=range] { width: 100%; accent-color: var(--crema); height: 28px; }
+.g-bar { height: 12px; border-radius: 99px; background: var(--bg3); overflow: hidden; }
+.g-bar i { display: block; height: 100%; border-radius: 99px; background: hsl(var(--h, 30) 60% 55%); transition: width .5s cubic-bezier(.2,.8,.2,1), background .5s; }
+.g-l { display: flex; justify-content: space-between; margin-top: 6px; font-size: .9rem; }
+
+/* Abstimmungs-Balken */
+.poll .opt { margin: 10px 0; }
+.poll .opt .t { display: flex; justify-content: space-between; margin-bottom: 5px; }
+.poll .opt .b { height: 14px; background: var(--bg3); border-radius: 99px; overflow: hidden; }
+.poll .opt .b i { display: block; height: 100%; width: 0; background: var(--crema); border-radius: 99px; transition: width .8s cubic-bezier(.2,.8,.2,1); }
+.poll .opt.right .b i { background: var(--fair); }
+.poll .opt.right .t { color: var(--fair); font-weight: 700; }
+.poll .n { font-size: .85rem; color: var(--mut); }
