@@ -41,8 +41,9 @@ body.hide-mini #miniqr { opacity: 0; pointer-events: none; }
 .steam path { fill: none; stroke: #f6ead855; stroke-width: 7; stroke-linecap: round; stroke-dasharray: 60 140; animation: steam 3.6s linear infinite; }
 .steam path:nth-child(2) { animation-delay: -1.2s; } .steam path:nth-child(3) { animation-delay: -2.4s; }
 @keyframes steam { from { stroke-dashoffset: 200; opacity: 0; } 30% { opacity: 1; } to { stroke-dashoffset: 0; opacity: 0; } }
-.crema { animation: swirl 14s linear infinite; transform-origin: 260px 150px; }
-@keyframes swirl { to { transform: rotate(360deg); } }
+.crema path { animation: swirl 5s ease-in-out infinite alternate; }
+@keyframes swirl { to { transform: translateX(14px); } }
+.steam path { stroke: #f6ead890; }
 .qrcard { display: flex; gap: 1.2em; align-items: center; background: #fff; color: #170d08; border-radius: var(--r); padding: 1em 1.3em; }
 .qrcard img { width: clamp(130px, 11vw, 210px); height: auto; }
 .qrcard b { color: #170d08; font-size: 1.3em; font-family: 'Fraunces', serif; }
@@ -341,6 +342,7 @@ function enter(s) {
   if (s.id === 'konsum') countUp();
   render(s.id);
 }
+let rz; addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(() => scenes[cur].scrollIntoView(), 150); });
 function go(i) { cur = Math.max(0, Math.min(scenes.length - 1, i)); scenes[cur].scrollIntoView({ behavior: 'smooth' }); }
 function step(d) {
   const s = scenes[cur], n = +s.dataset.steps;
@@ -349,7 +351,9 @@ function step(d) {
   go(cur + d);
 }
 addEventListener('keydown', e => {
-  if (e.target.tagName === 'INPUT') return;
+  const t = e.target.tagName;
+  if (t === 'INPUT' && e.key.startsWith('Arrow')) return;
+  if (t === 'BUTTON' && (e.key === ' ' || e.key === 'Enter')) return;
   if (['ArrowRight', 'ArrowDown', 'PageDown', ' ', 'Enter'].includes(e.key)) { e.preventDefault(); step(1); }
   if (['ArrowLeft', 'ArrowUp', 'PageUp'].includes(e.key)) { e.preventDefault(); step(-1); }
 });
